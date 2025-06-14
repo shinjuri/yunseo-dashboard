@@ -4,7 +4,6 @@ import { Chart, registerables } from 'chart.js';
 // Firebase Imports
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signInAnonymously } from "firebase/auth";
-// 원래 여기에 updateDoc이 있었지만, 사용되지 않아 제거했습니다.
 import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query } from "firebase/firestore";
 
 Chart.register(...registerables);
@@ -517,7 +516,7 @@ const SubjectView = ({ subject, onNavigate, db, userId }) => {
         
         const unsubscribes = Object.entries(collections).map(([key, name]) => {
             const collectionRef = collection(db, `artifacts/${appId}/users/${userId}/${name}`);
-            const q = query(collection(db, `artifacts/${appId}/users/${userId}/${name}`)); // Fix: Correct collection reference within query
+            const q = query(collectionRef); // Fix: Removed redundant collection(db, ...)
             return onSnapshot(q, (snapshot) => {
                 const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 const filteredData = data.filter(item => item.subject === subject);
