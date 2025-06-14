@@ -15,12 +15,10 @@ const Trash2 = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="
 const BookOpen = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>;
 const ClipboardList = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M12 11h4"></path><path d="M12 16h4"></path><path d="M8 11h.01"></path><path d="M8 16h.01"></path></svg>;
 const Paperclip = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>;
-const PlusCircle = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>;
 const X = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
 
-// D-Day Counter Component (No changes)
+// D-Day Counter Component
 const DdayCounter = ({ db, userId }) => {
-    // ... same as previous version
     const [events, setEvents] = useState([]);
     const [eventName, setEventName] = useState('');
     const [eventDate, setEventDate] = useState('');
@@ -43,8 +41,7 @@ const DdayCounter = ({ db, userId }) => {
         today.setHours(0, 0, 0, 0);
         targetDate.setHours(0, 0, 0, 0);
         const diffTime = targetDate - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays;
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
     
     const addEvent = async (e) => {
@@ -95,7 +92,6 @@ const DdayCounter = ({ db, userId }) => {
 
 // TodoList Component
 const TodoList = ({ db, userId }) => {
-    // ... (No changes)
     const [todos, setTodos] = useState([]);
     const [newTodo, setNewTodo] = useState('');
     const appId = typeof window !== 'undefined' && typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
@@ -147,7 +143,6 @@ const TodoList = ({ db, userId }) => {
 
 // Memo Component
 const Memo = () => {
-    // ... (No changes)
     const [memo, setMemo] = useState('');
     const [showConfirm, setShowConfirm] = useState(false);
     const handleSave = () => { setShowConfirm(true); setTimeout(() => setShowConfirm(false), 2000); };
@@ -163,7 +158,6 @@ const Memo = () => {
 
 // Timetable Component
 const Timetable = () => {
-    // ... (No changes)
   const schedule = [
     { period: 1, mon: '사회', tue: '과학', wed: '국어', thu: '영어', fri: '정보' },
     { period: 2, mon: '과학', tue: '진로', wed: '수학', thu: '체육', fri: '영어' },
@@ -197,7 +191,6 @@ const Timetable = () => {
 
 // Calendar Component
 const Calendar = ({events}) => {
-    // ... (No changes)
   const [currentDate, setCurrentDate] = useState(new Date(2025, 5, 14));
   const changeMonth = (offset) => { setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1)); };
   const renderCalendar = () => {
@@ -244,7 +237,7 @@ const Calendar = ({events}) => {
   );
 };
 
-// Info & History Subject Pages (Static, No changes)
+// Info & History Subject Pages (Static)
 const InfoSubjectView = ({ onNavigate }) => { /* ... */ };
 const HistorySubjectView = ({ onNavigate }) => { /* ... */ };
 
@@ -257,7 +250,7 @@ export default function App() {
     
     useEffect(() => {
         try {
-            const firebaseConfigString = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_FIREBASE_CONFIG)
+            const firebaseConfigString = (typeof process !== 'undefined' && process.env.REACT_APP_FIREBASE_CONFIG)
                 ? process.env.REACT_APP_FIREBASE_CONFIG
                 : (typeof window !== 'undefined' ? window.__firebase_config : null);
                 
@@ -298,7 +291,8 @@ export default function App() {
 
     return (
         <div className="bg-slate-900 min-h-screen font-sans p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
+             <div className="absolute top-0 left-0 w-full h-full bg-cover bg-center" style={{backgroundImage: "url('https://placehold.co/1920x1080/0f172a/0f172a.png')", zIndex: -1}}></div>
+            <div className="max-w-7xl mx-auto relative">
                 <header className="mb-8 flex justify-between items-center">
                     <div>
                         <h1 className="text-5xl font-extrabold text-cyan-300 tracking-wider" style={{fontFamily: "'Gaegu', cursive"}}>
@@ -537,89 +531,87 @@ const SubjectView = ({ subject, onNavigate, db, userId }) => {
                 <button onClick={() => onNavigate('dashboard')} className="mb-6 bg-slate-700 text-gray-200 px-4 py-2 rounded-lg hover:bg-slate-600">&larr; 대시보드로 돌아가기</button>
                 <h1 className="text-5xl font-bold text-cyan-300 mb-8" style={{fontFamily: "'Gaegu', cursive"}}>{subject} 학습 페이지</h1>
                 
-                <div className="space-y-12">
-                     {/* 다가오는 수행평가 위젯 */}
-                    <div>
-                        <h2 className="text-3xl font-bold text-emerald-300 mb-4" style={{fontFamily: "'Gaegu', cursive"}}>다가오는 수행평가</h2>
-                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {assessments.filter(item => calculateDday(item.dueDate) >= 0).slice(0, 3).map(item => {
-                                const dDay = calculateDday(item.dueDate);
-                                const dDayText = dDay === 0 ? 'D-DAY' : `D-${dDay}`;
-                                const color = dDay < 4 ? 'bg-red-500/20 border-red-500' : 'bg-emerald-500/20 border-emerald-500';
-                                return (
-                                    <div key={item.id} className={`p-4 rounded-lg border-2 ${color}`}>
-                                        <div className="flex justify-between items-center">
-                                            <span className="font-bold text-gray-200">{item.name}</span>
-                                            <span className="font-black text-xl text-white">{dDayText}</span>
-                                        </div>
-                                        <p className="text-sm text-gray-400 mt-1">{item.dueDate}</p>
+                 {/* 다가오는 수행평가 위젯 */}
+                <div className="mb-12">
+                    <h2 className="text-3xl font-bold text-emerald-300 mb-4" style={{fontFamily: "'Gaegu', cursive"}}>다가오는 수행평가</h2>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {assessments.filter(item => calculateDday(item.dueDate) >= 0).slice(0, 3).map(item => {
+                            const dDay = calculateDday(item.dueDate);
+                            const dDayText = dDay === 0 ? 'D-DAY' : `D-${dDay}`;
+                            const color = dDay < 4 ? 'bg-red-500/20 border-red-500' : 'bg-emerald-500/20 border-emerald-500';
+                            return (
+                                <div key={item.id} className={`p-4 rounded-lg border-2 ${color}`}>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-bold text-gray-200">{item.name}</span>
+                                        <span className="font-black text-xl text-white">{dDayText}</span>
                                     </div>
-                                )
-                            })}
-                             {assessments.filter(item => calculateDday(item.dueDate) >= 0).length === 0 && (
-                                 <p className="text-gray-500 col-span-full">다가오는 수행평가가 없습니다.</p>
-                             )}
+                                    <p className="text-sm text-gray-400 mt-1">{item.dueDate}</p>
+                                </div>
+                            )
+                        })}
+                         {assessments.filter(item => calculateDday(item.dueDate) >= 0).length === 0 && (
+                             <p className="text-gray-500 col-span-full">다가오는 수행평가가 없습니다.</p>
+                         )}
+                    </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                     {/* 왼쪽: 수행평가 관리 */}
+                    <div className="space-y-6">
+                        <h2 className="text-3xl font-bold text-emerald-300" style={{fontFamily: "'Gaegu', cursive"}}>수행평가 관리</h2>
+                        <AddAssessmentForm onAdd={addHandler('assessments')} />
+                        <div className="overflow-x-auto bg-slate-800/80 p-4 rounded-lg border border-slate-700">
+                             <table className="w-full text-left min-w-[400px]">
+                                <thead>
+                                    <tr className="border-b border-slate-600">
+                                        <th className="p-3 text-sm font-semibold text-gray-300">수행평가명</th>
+                                        <th className="p-3 text-sm font-semibold text-gray-300">마감일</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {assessments.map(item => (
+                                        <tr key={item.id} className="border-b border-slate-700 hover:bg-slate-700/50">
+                                            <td className="p-3 text-gray-200">{item.name}</td>
+                                            <td className="p-3 text-gray-300">{item.dueDate}</td>
+                                        </tr>
+                                    ))}
+                                    {assessments.length === 0 && (
+                                        <tr><td colSpan="2" className="p-4 text-center text-gray-500">등록된 수행평가가 없습니다.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                         {/* 수행평가 관리 섹션 */}
-                        <div className="space-y-4">
-                            <h2 className="text-3xl font-bold text-emerald-300" style={{fontFamily: "'Gaegu', cursive"}}>수행평가 관리</h2>
-                            <AddAssessmentForm onAdd={addHandler('assessments')} />
-                            <div className="overflow-x-auto bg-slate-800/80 p-4 rounded-lg border border-slate-700">
-                                 <table className="w-full text-left min-w-[400px]">
-                                    <thead>
-                                        <tr className="border-b border-slate-600">
-                                            <th className="p-3 text-sm font-semibold text-gray-300">수행평가명</th>
-                                            <th className="p-3 text-sm font-semibold text-gray-300">마감일</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {assessments.map(item => (
-                                            <tr key={item.id} className="border-b border-slate-700 hover:bg-slate-700/50">
-                                                <td className="p-3 text-gray-200">{item.name}</td>
-                                                <td className="p-3 text-gray-300">{item.dueDate}</td>
-                                            </tr>
-                                        ))}
-                                        {assessments.length === 0 && (
-                                            <tr><td colSpan="2" className="p-4 text-center text-gray-500">등록된 수행평가가 없습니다.</td></tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
 
-                        {/* 수업 자료 섹션 */}
+                    {/* 오른쪽: 수업 자료 */}
+                    <div className="space-y-6">
+                         <h2 className="text-3xl font-bold text-cyan-300" style={{fontFamily: "'Gaegu', cursive"}}>수업 자료</h2>
+                        <AddMaterialForm onAdd={addHandler('materials')} />
                         <div className="space-y-4">
-                             <h2 className="text-3xl font-bold text-cyan-300" style={{fontFamily: "'Gaegu', cursive"}}>수업 자료</h2>
-                            <AddMaterialForm onAdd={addHandler('materials')} />
-                            <div className="space-y-4">
-                                {materials.map((entry) => (
-                                   <div key={entry.id} className="bg-slate-800/80 p-4 rounded-lg border border-slate-700">
-                                       <div className="flex justify-between items-center mb-2">
-                                           <h3 className="text-xl font-semibold text-gray-200">{entry.topic}</h3>
-                                           <span className="text-sm text-gray-400">{entry.date}</span>
-                                       </div>
-                                       {entry.htmlContent ? (
-                                            <button onClick={() => setViewingHtml(entry.htmlContent)} className="text-cyan-400 hover:underline mt-2 flex items-center gap-2">
-                                               <Paperclip/> {entry.fileName || "HTML 노트 보기"}
-                                            </button>
-                                       ) : (
-                                           entry.fileName && (
-                                               <div className="flex items-center gap-2 mt-2 text-gray-400">
-                                                   <Paperclip/> <span>{entry.fileName}</span>
-                                               </div>
-                                           )
-                                       )}
+                            {materials.map((entry) => (
+                               <div key={entry.id} className="bg-slate-800/80 p-4 rounded-lg border border-slate-700">
+                                   <div className="flex justify-between items-center mb-2">
+                                       <h3 className="text-xl font-semibold text-gray-200">{entry.topic}</h3>
+                                       <span className="text-sm text-gray-400">{entry.date}</span>
                                    </div>
-                                ))}
-                                 {materials.length === 0 && (
-                                    <div className="text-center py-8">
-                                        <p className="text-gray-500">기록된 수업 자료가 없습니다.</p>
-                                    </div>
-                                )}
-                            </div>
+                                   {entry.htmlContent ? (
+                                        <button onClick={() => setViewingHtml(entry.htmlContent)} className="text-cyan-400 hover:underline mt-2 flex items-center gap-2">
+                                           <Paperclip/> {entry.fileName || "HTML 노트 보기"}
+                                        </button>
+                                   ) : (
+                                       entry.fileName && (
+                                           <div className="flex items-center gap-2 mt-2 text-gray-400">
+                                               <Paperclip/> <span>{entry.fileName}</span>
+                                           </div>
+                                       )
+                                   )}
+                               </div>
+                            ))}
+                             {materials.length === 0 && (
+                                <div className="text-center py-8">
+                                    <p className="text-gray-500">기록된 수업 자료가 없습니다.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
