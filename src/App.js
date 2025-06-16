@@ -17,7 +17,7 @@ const DdayCounter = ({ db, userId }) => {
     const [events, setEvents] = useState([]);
     const [eventName, setEventName] = useState('');
     const [eventDate, setEventDate] = useState('');
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const appId = typeof window !== 'undefined' && window.__app_id ? window.__app_id : 'default-app-id';
 
     useEffect(() => {
         if (!userId || !db) return;
@@ -89,7 +89,7 @@ const DdayCounter = ({ db, userId }) => {
 const TodoList = ({ db, userId }) => {
     const [todos, setTodos] = useState([]);
     const [newTodo, setNewTodo] = useState('');
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const appId = typeof window !== 'undefined' && window.__app_id ? window.__app_id : 'default-app-id';
 
     useEffect(() => {
         if (!userId || !db) return;
@@ -243,13 +243,14 @@ export default function App() {
     
     useEffect(() => {
         try {
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-            if (!firebaseConfig) {
+            const firebaseConfigStr = typeof window !== 'undefined' ? window.__firebase_config : null;
+            if (!firebaseConfigStr) {
                 console.error("Firebase config is not defined.");
                 setIsLoading(false);
                 return;
             }
 
+            const firebaseConfig = JSON.parse(firebaseConfigStr);
             const app = initializeApp(firebaseConfig);
             const authInstance = getAuth(app);
             const dbInstance = getFirestore(app);
@@ -260,7 +261,7 @@ export default function App() {
                 if (user) {
                     setUserId(user.uid);
                 } else {
-                    const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    const authToken = typeof window !== 'undefined' ? window.__initial_auth_token : null;
                     if (authToken) {
                         try {
                            await signInWithCustomToken(authInstance, authToken);
@@ -337,7 +338,7 @@ export default function App() {
 const DashboardView = ({ onNavigate, db, userId }) => {
     const subjects = ['국어', '영어', '수학', '과학', '사회', '한국사', '정보', '진로', '동아리'];
     const [ddayEvents, setDdayEvents] = useState([]);
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const appId = typeof window !== 'undefined' && window.__app_id ? window.__app_id : 'default-app-id';
 
     useEffect(() => {
         if (!userId || !db) return;
@@ -489,7 +490,7 @@ const SubjectView = ({ subject, onNavigate, db, userId }) => {
     const [materials, setMaterials] = useState([]);
     const [assessments, setAssessments] = useState([]);
     const [viewingHtml, setViewingHtml] = useState(null);
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const appId = typeof window !== 'undefined' && window.__app_id ? window.__app_id : 'default-app-id';
 
     useEffect(() => {
         if (!userId || !db) return;
