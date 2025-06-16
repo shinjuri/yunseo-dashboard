@@ -291,8 +291,8 @@ export default function App() {
     }
 
     return (
-        <div className="bg-gray-100 min-h-screen font-sans p-4 sm:p-6 lg:p-8">
-            <div className="w-full max-w-7xl mx-auto">
+        <div className="bg-gray-100 min-h-screen font-sans">
+            <div className="container mx-auto p-4 sm:p-6 lg:p-8">
                 <header className="mb-8 flex justify-between items-center">
                     <div>
                         <h1 className="text-5xl font-extrabold text-blue-600 tracking-wider" style={{fontFamily: "'Gaegu', cursive"}}>
