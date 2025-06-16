@@ -3,8 +3,8 @@ import { Chart, registerables } from 'chart.js';
 
 // Firebase Imports
 import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, signInAnonymously } from "firebase/auth";
-import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, updateDoc } from "firebase/firestore";
+import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "firebase/auth";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, updateDoc, where } from "firebase/firestore";
 
 Chart.register(...registerables);
 
@@ -21,7 +21,7 @@ const DdayCounter = ({ db, userId }) => {
     const [events, setEvents] = useState([]);
     const [eventName, setEventName] = useState('');
     const [eventDate, setEventDate] = useState('');
-    const appId = typeof window !== 'undefined' && typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
     useEffect(() => {
         if (!userId || !db) return;
@@ -73,13 +73,13 @@ const DdayCounter = ({ db, userId }) => {
                     const color = dDay < 7 ? 'bg-red-400 text-white' : 'bg-blue-400 text-white';
                     return (
                         <div key={event.id} className={`p-3 rounded-lg flex justify-between items-center shadow-sm ${color}`}>
-                           <div>
+                            <div>
                                 <div className="font-bold">{event.name}</div>
                                 <div className="text-sm opacity-90">{event.date}</div>
-                           </div>
+                            </div>
                            <div className="flex items-center gap-2">
-                             <div className="font-black text-xl drop-shadow-sm">{dDayText}</div>
-                             <button onClick={() => removeEvent(event.id)} className="text-white/70 hover:text-white"><Trash2 /></button>
+                               <div className="font-black text-xl drop-shadow-sm">{dDayText}</div>
+                               <button onClick={() => removeEvent(event.id)} className="text-white/70 hover:text-white"><Trash2 /></button>
                            </div>
                         </div>
                     );
@@ -93,7 +93,7 @@ const DdayCounter = ({ db, userId }) => {
 const TodoList = ({ db, userId }) => {
     const [todos, setTodos] = useState([]);
     const [newTodo, setNewTodo] = useState('');
-    const appId = typeof window !== 'undefined' && typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
     useEffect(() => {
         if (!userId || !db) return;
@@ -123,7 +123,7 @@ const TodoList = ({ db, userId }) => {
         <div className="bg-white p-4 rounded-xl shadow-md h-[500px] flex flex-col border border-gray-200">
             <h3 className="font-bold text-lg mb-3 text-blue-600 flex-shrink-0">📝 To Do List</h3>
             <div className="flex gap-2 mb-3 flex-shrink-0">
-                <input type="text" value={newTodo} onChange={(e) => setNewTodo(e.target.value)} placeholder="새로운 할 일" className="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <input type="text" value={newTodo} onChange={(e) => setNewTodo(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && addTodo()} placeholder="새로운 할 일" className="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 <button onClick={addTodo} className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all shadow">추가</button>
             </div>
             <div className="flex-grow overflow-y-auto pr-2">
@@ -222,7 +222,7 @@ const Calendar = ({events}) => {
             <div className="flex items-center gap-4">
                 <button onClick={() => changeMonth(-1)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100"><ChevronLeft /></button>
                 <h2 className="text-2xl font-bold text-gray-700" style={{ fontFamily: "'Gaegu', cursive" }}>
-                  {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
+                    {currentDate.getFullYear()}년 {currentDate.getMonth() + 1}월
                 </h2>
                 <button onClick={() => changeMonth(1)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100"><ChevronRight /></button>
             </div>
@@ -236,40 +236,45 @@ const Calendar = ({events}) => {
   );
 };
 
-// Info & History Subject Pages (Static)
-const InfoSubjectView = ({ onNavigate }) => { return (<div>Info Page</div>) };
-const HistorySubjectView = ({ onNavigate }) => { return (<div>History Page</div>)};
 
 // Main App Component
 export default function App() {
     const [page, setPage] = useState('dashboard');
     const [db, setDb] = useState(null);
+    const [auth, setAuth] = useState(null);
     const [userId, setUserId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     
     useEffect(() => {
         try {
-            const firebaseConfigString = (typeof process !== 'undefined' && process.env.REACT_APP_FIREBASE_CONFIG)
-                ? process.env.REACT_APP_FIREBASE_CONFIG
-                : (typeof window !== 'undefined' ? window.__firebase_config : null);
-                
-            if (!firebaseConfigString) {
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            if (!firebaseConfig) {
                 console.error("Firebase config is not defined.");
                 setIsLoading(false);
                 return;
             }
 
-            const firebaseConfig = JSON.parse(firebaseConfigString);
             const app = initializeApp(firebaseConfig);
             const authInstance = getAuth(app);
             const dbInstance = getFirestore(app);
             setDb(dbInstance);
+            setAuth(authInstance);
 
-            const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+            const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
                 if (user) {
                     setUserId(user.uid);
                 } else {
-                    signInAnonymously(authInstance).catch(error => console.error("Anonymous sign-in failed:", error));
+                    const authToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    if (authToken) {
+                        try {
+                           await signInWithCustomToken(authInstance, authToken);
+                        } catch (error) {
+                           console.error("Custom token sign-in failed, trying anonymous.", error);
+                           await signInAnonymously(authInstance);
+                        }
+                    } else {
+                        await signInAnonymously(authInstance);
+                    }
                 }
                 setIsLoading(false);
             });
@@ -285,7 +290,7 @@ export default function App() {
     };
     
     if (isLoading) {
-        return <div className="flex items-center justify-center min-h-screen bg-gray-100 text-gray-800">Loading...</div>;
+        return <div className="flex items-center justify-center min-h-screen bg-gray-100 text-gray-800">Loading Application...</div>;
     }
 
     return (
@@ -306,10 +311,6 @@ export default function App() {
                 <main>
                     {page === 'dashboard' ? (
                         <DashboardView onNavigate={handleNavigation} db={db} userId={userId} />
-                    ) : page === '정보' ? (
-                        <InfoSubjectView onNavigate={handleNavigation} />
-                    ) : page === '한국사' ? (
-                        <HistorySubjectView onNavigate={handleNavigation} />
                     ) : (
                         <SubjectView 
                             subject={page} 
@@ -340,17 +341,17 @@ export default function App() {
 const DashboardView = ({ onNavigate, db, userId }) => {
     const subjects = ['국어', '영어', '수학', '과학', '사회', '한국사', '정보', '진로', '동아리'];
     const [ddayEvents, setDdayEvents] = useState([]);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
     useEffect(() => {
         if (!userId || !db) return;
-        const appId = typeof window !== 'undefined' && typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
         const q = query(collection(db, `artifacts/${appId}/users/${userId}/ddayEvents`));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const eventsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setDdayEvents(eventsData);
-        });
+        }, (error) => console.error("Error fetching dday events for calendar:", error));
         return () => unsubscribe();
-    }, [userId, db]);
+    }, [userId, db, appId]);
 
     return (
         <div className="space-y-6">
@@ -392,7 +393,11 @@ const AddMaterialForm = ({ onAdd }) => {
     
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!topic.trim()) { alert('수업 주제를 입력해주세요.'); return; }
+        if (!topic.trim()) { 
+          // Using a custom modal/alert in a real app is better than window.alert
+          console.error('수업 주제를 입력해주세요.'); 
+          return; 
+        }
         const newMaterial = { date, topic, htmlContent, fileName: fileInputRef.current?.files[0]?.name || null };
         onAdd(newMaterial);
         setTopic('');
@@ -401,24 +406,24 @@ const AddMaterialForm = ({ onAdd }) => {
     };
 
     return (
-         <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200">
+       <div className="bg-blue-50 p-6 rounded-xl border-2 border-blue-200">
             <h3 className="text-xl font-bold text-blue-700 mb-4" style={{fontFamily: "'Gaegu', cursive"}}>새로운 수업자료 추가 🗒️</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="log-date" className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
-                        <input type="date" id="log-date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-2 border border-gray-300 rounded-lg" required />
-                    </div>
-                    <div>
-                        <label htmlFor="log-topic" className="block text-sm font-medium text-gray-700 mb-1">수업 주제/단원</label>
-                        <input type="text" id="log-topic" value={topic} onChange={e => setTopic(e.target.value)} placeholder="예: 함수의 극한과 연속성" className="w-full p-2 border border-gray-300 rounded-lg" required />
-                    </div>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">관련 파일 (HTML 파일 포함)</label>
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"/>
-                </div>
-                <button type="submit" className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors shadow">자료 추가</button>
+                     <div>
+                         <label htmlFor="log-date" className="block text-sm font-medium text-gray-700 mb-1">날짜</label>
+                         <input type="date" id="log-date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-2 border border-gray-300 rounded-lg" required />
+                     </div>
+                     <div>
+                         <label htmlFor="log-topic" className="block text-sm font-medium text-gray-700 mb-1">수업 주제/단원</label>
+                         <input type="text" id="log-topic" value={topic} onChange={e => setTopic(e.target.value)} placeholder="예: 함수의 극한과 연속성" className="w-full p-2 border border-gray-300 rounded-lg" required />
+                     </div>
+                 </div>
+                 <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">관련 파일 (HTML 파일 포함)</label>
+                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"/>
+                 </div>
+                 <button type="submit" className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors shadow">자료 추가</button>
             </form>
         </div>
     )
@@ -431,7 +436,11 @@ const AddAssessmentForm = ({ onAdd }) => {
     
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!name.trim() || !dueDate) { alert('수행평가명과 마감일을 모두 입력해주세요.'); return; }
+        if (!name.trim() || !dueDate) { 
+          // Using a custom modal/alert in a real app is better than window.alert
+          console.error('수행평가명과 마감일을 모두 입력해주세요.'); 
+          return; 
+        }
         const newAssessment = { name, dueDate, description, status: '예정' };
         onAdd(newAssessment);
         setName('');
@@ -484,26 +493,29 @@ const SubjectView = ({ subject, onNavigate, db, userId }) => {
     const [materials, setMaterials] = useState([]);
     const [assessments, setAssessments] = useState([]);
     const [viewingHtml, setViewingHtml] = useState(null);
-    const appId = typeof window !== 'undefined' && typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id';
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
     useEffect(() => {
         if (!userId || !db) return;
-        const collections = { materials: `materials`, assessments: `assessments` };
-        const setters = { materials: setMaterials, assessments: setAssessments };
         
-        const unsubscribes = Object.entries(collections).map(([key, name]) => {
-            const collectionRef = collection(db, `artifacts/${appId}/users/${userId}/${name}`);
-            const q = query(collectionRef);
-            return onSnapshot(q, (snapshot) => {
-                const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                const filteredData = data.filter(item => item.subject === subject);
-                
-                if(name === 'materials') filteredData.sort((a,b) => new Date(b.date) - new Date(a.date));
-                if(name === 'assessments') filteredData.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+        const unsubscribes = [];
 
-                setters[key](filteredData);
-            });
-        });
+        // Fetch materials for the current subject
+        const materialsQuery = query(collection(db, `artifacts/${appId}/users/${userId}/materials`), where("subject", "==", subject));
+        unsubscribes.push(onSnapshot(materialsQuery, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            data.sort((a,b) => new Date(b.date) - new Date(a.date));
+            setMaterials(data);
+        }));
+
+        // Fetch assessments for the current subject
+        const assessmentsQuery = query(collection(db, `artifacts/${appId}/users/${userId}/assessments`), where("subject", "==", subject));
+        unsubscribes.push(onSnapshot(assessmentsQuery, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            data.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            setAssessments(data);
+        }));
+
         return () => unsubscribes.forEach(unsub => unsub());
     }, [db, userId, subject, appId]);
 
@@ -530,26 +542,26 @@ const SubjectView = ({ subject, onNavigate, db, userId }) => {
                 
                  <div className="mb-12">
                     <h2 className="text-3xl font-bold text-green-600 mb-4" style={{fontFamily: "'Gaegu', cursive"}}>다가오는 수행평가</h2>
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {assessments.filter(item => calculateDday(item.dueDate) >= 0).slice(0, 3).map(item => {
-                            const dDay = calculateDday(item.dueDate);
-                            const dDayText = dDay === 0 ? 'D-DAY' : `D-${dDay}`;
-                            const color = dDay < 4 ? 'bg-red-100 border-red-400' : 'bg-green-100 border-green-400';
-                            return (
-                                <div key={item.id} className={`p-4 rounded-lg border-2 ${color}`}>
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-bold text-gray-800">{item.name}</span>
-                                        <span className="font-black text-xl text-gray-800">{dDayText}</span>
-                                    </div>
-                                    <p className="text-sm text-gray-500 mt-1">{item.dueDate}</p>
-                                </div>
-                            )
-                        })}
-                         {assessments.filter(item => calculateDday(item.dueDate) >= 0).length === 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {assessments.filter(item => calculateDday(item.dueDate) >= 0).slice(0, 3).map(item => {
+                              const dDay = calculateDday(item.dueDate);
+                              const dDayText = dDay === 0 ? 'D-DAY' : `D-${dDay}`;
+                              const color = dDay < 4 ? 'bg-red-100 border-red-400' : 'bg-green-100 border-green-400';
+                              return (
+                                  <div key={item.id} className={`p-4 rounded-lg border-2 ${color}`}>
+                                      <div className="flex justify-between items-center">
+                                          <span className="font-bold text-gray-800">{item.name}</span>
+                                          <span className="font-black text-xl text-gray-800">{dDayText}</span>
+                                      </div>
+                                      <p className="text-sm text-gray-500 mt-1">{item.dueDate}</p>
+                                  </div>
+                              )
+                          })}
+                           {assessments.filter(item => calculateDday(item.dueDate) >= 0).length === 0 && (
                              <p className="text-gray-500 col-span-full">다가오는 수행평가가 없습니다.</p>
-                         )}
-                    </div>
-                </div>
+                           )}
+                      </div>
+                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     <div className="space-y-6">
@@ -557,24 +569,24 @@ const SubjectView = ({ subject, onNavigate, db, userId }) => {
                         <AddAssessmentForm onAdd={addHandler('assessments')} />
                         <div className="overflow-x-auto bg-white p-4 rounded-lg border border-gray-200">
                              <table className="w-full text-left min-w-[400px]">
-                                <thead>
-                                    <tr className="border-b border-gray-200">
-                                        <th className="p-3 text-sm font-semibold text-gray-500">수행평가명</th>
-                                        <th className="p-3 text-sm font-semibold text-gray-500">마감일</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {assessments.map(item => (
-                                        <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
-                                            <td className="p-3 text-gray-800">{item.name}</td>
-                                            <td className="p-3 text-gray-600">{item.dueDate}</td>
-                                        </tr>
-                                    ))}
-                                    {assessments.length === 0 && (
-                                        <tr><td colSpan="2" className="p-4 text-center text-gray-400">등록된 수행평가가 없습니다.</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                 <thead>
+                                     <tr className="border-b border-gray-200">
+                                         <th className="p-3 text-sm font-semibold text-gray-500">수행평가명</th>
+                                         <th className="p-3 text-sm font-semibold text-gray-500">마감일</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody>
+                                     {assessments.map(item => (
+                                         <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                             <td className="p-3 text-gray-800">{item.name}</td>
+                                             <td className="p-3 text-gray-600">{item.dueDate}</td>
+                                         </tr>
+                                     ))}
+                                     {assessments.length === 0 && (
+                                         <tr><td colSpan="2" className="p-4 text-center text-gray-400">등록된 수행평가가 없습니다.</td></tr>
+                                     )}
+                                 </tbody>
+                             </table>
                         </div>
                     </div>
 
@@ -605,7 +617,7 @@ const SubjectView = ({ subject, onNavigate, db, userId }) => {
                                 <div className="text-center py-8">
                                     <p className="text-gray-400">기록된 수업 자료가 없습니다.</p>
                                 </div>
-                            )}
+                             )}
                         </div>
                     </div>
                 </div>
