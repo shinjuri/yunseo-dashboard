@@ -1,52 +1,72 @@
-// src/App.js
+// src/DashboardView.js
 
-import React, { useState, useEffect } from 'react';
-import { Chart, registerables } from 'chart.js';
-import { initializeApp } from 'firebase/app';
-import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { ChevronLeft, ChevronRight, Trash2, BookOpen, Paperclip, X } from 'lucide-react';
-import { firebaseConfig } from './firebaseConfig';
-import DashboardView from './DashboardView';
-import SubjectView from './SubjectView';
+import React, { useState } from 'react';
 import DdayCounter from './DdayCounter';
+import { format } from 'date-fns';
 
-// Chart.js 등록
-Chart.register(...registerables);
+export default function DashboardView({ onNavigate, db, userId }) {
+  // 날짜 선택 상태
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
-// Firebase 초기화
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
-
-export default function App() {
-  const [page, setPage]         = useState('dashboard');
-  const [userId, setUserId]     = useState(null);
-  const [isLoading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, user => {
-      if (user) setUserId(user.uid);
-      else signInAnonymously(auth).catch(console.error);
-      setLoading(false);
-    });
-    return () => unsub();
-  }, []);
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
+  // 과목 버튼 리스트
+  const subjects = ['국어','영어','수학','과학','사회','한국사','정보','진로','동아리'];
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Navigation/Header 생략 */}
-        {page === 'dashboard' ? (
-          <DashboardView onNavigate={setPage} db={db} userId={userId} />
-        ) : (
-          <SubjectView subject={page} onNavigate={setPage} db={db} userId={userId} />
-        )}
-      </div>
+    <div className="space-y-6">
+      {/* 상단 타이틀 & 날짜 */}
+      <header className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">윤서의 슬기로운 고등생활</h1>
+        <input
+          type="date"
+          className="border rounded px-2 py-1"
+          value={selectedDate}
+          onChange={e => setSelectedDate(e.target.value)}
+        />
+      </header>
+
+      {/* 과목 버튼 그리드 */}
+      <section className="grid grid-cols-3 gap-4">
+        {subjects.map(sub => (
+          <button
+            key={sub}
+            className="p-4 bg-white rounded-lg shadow hover:bg-blue-50"
+            onClick={() => onNavigate(sub)}
+          >
+            {sub}
+          </button>
+        ))}
+      </section>
+
+      {/* D-Day 카운터 */}
+      <section className="bg-white p-4 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-2">⭐️ D-Day 카운터</h2>
+        <DdayCounter db={db} userId={userId} />
+      </section>
+
+      {/* 시간표 예시 */}
+      <section className="bg-white p-4 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-2">🕒 시간표</h2>
+        <table className="w-full text-center border-collapse">
+          <thead>
+            <tr>
+              {['월','화','수','목','금'].map(day => (
+                <th key={day} className="border px-2 py-1">{day}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[1,2,3,4,5].map(row => (
+              <tr key={row} className="even:bg-gray-50">
+                {subjects.slice(0,5).map((sub, i) => (
+                  <td key={i} className="border px-2 py-1 text-sm">
+                    {sub}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
     </div>
-  );
+);
 }
